@@ -1,0 +1,13 @@
+GAME:
+  board_size: [3,3] 
+  in_row: 3
+MCTS:
+  n_simulations: 10
+  cpuct: 2
+  dirichlet_alpha: 1
+NN:
+  n_res_layers: 5
+AZ:
+  eps: 25
+  n_games: 20
+  queue_len: 200
