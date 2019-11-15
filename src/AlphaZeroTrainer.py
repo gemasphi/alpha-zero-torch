@@ -1,7 +1,5 @@
 import numpy as np
 from collections import deque
-from Player import *
-from NN import NetWrapper as nn
 
 class AlphaZeroTrainer(object):
 	def __init__(self, NN, game, mcts, **params):
@@ -15,13 +13,17 @@ class AlphaZeroTrainer(object):
 
 	def train(self):
 		train_data = deque([], maxlen = self.queue_len)
+		self.temp = 2
 
 		for i in range(self.eps):
-			#print("One self play ep: {}/{}".format(i,self.eps))
+			print("One self play ep: {}/{}".format(i,self.eps))
 			train_data += self.generate_data()
 			self.nn_wrapper.train(train_data)
 			self.nn_wrapper.save_model()
 			
+			if self.eps == 5:
+				self.temp = 0.5
+
 	def generate_data(self):
 		train_examples = deque([])
 
@@ -36,7 +38,7 @@ class AlphaZeroTrainer(object):
 		winner = None
 		self.game.reset()
 		while winner == None:
-			action_probs = self.mcts.simulate(self.game, self.nn_wrapper)
+			action_probs = self.mcts.simulate(self.game, self.nn_wrapper, self.temp)
 			action = np.random.choice(len(action_probs),p = action_probs) #TODO: should this be uniform or not?
 				
 			examples.append([np.copy(self.game.get_board()), action_probs, self.game.get_player()])

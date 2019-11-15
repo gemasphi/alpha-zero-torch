@@ -9,7 +9,7 @@ class NetWrapper(object):
     def __init__(self, game, **params):
         super(NetWrapper, self).__init__()
         self.nn = AlphaZeroNet(game, params['n_res_layers'])
-        self.optimizer = optim.Adam(self.nn.parameters(), lr = 0.2, weight_decay = 0.1)
+        self.optimizer = optim.Adam(self.nn.parameters(), lr = 0.1, weight_decay = 0.005)
 
     def train(self, data, batch_size = 32, loss_display = 2, epochs = 10):
         self.nn.train()
@@ -42,7 +42,7 @@ class NetWrapper(object):
         p = p.detach().numpy()
         return v, p
 
-    def save_model(self, folder = "models", model_name = "model.pt"):
+    def save_model(self, folder = "../models", model_name = "model.pt"):
         if not os.path.isdir(folder):
             os.mkdir(folder)
 
@@ -51,11 +51,10 @@ class NetWrapper(object):
             'optimizer_state_dict': self.optimizer.state_dict(),
             }, "{}/{}".format(folder, model_name))
 
-    def load_model(self, path = "models/model.pt"):
+    def load_model(self, path = "../models/model.pt"):
         cp = torch.load(path)
         self.nn.load_state_dict(cp['model_state_dict'])
         self.optimizer.load_state_dict(cp['optimizer_state_dict'])
-
         return self.nn
         
 class AlphaZeroNet(nn.Module):
@@ -140,7 +139,6 @@ class PolicyHead(nn.Module):
         self.logsoftmax = nn.LogSoftmax(dim=1)
         
         if self.output_planes > 1:
-            #TODO: this isnt being coverted into the action_size
             self.conv2 = nn.Conv2d(32, self.output_planes, kernel_size=1) # policy head
         else:
             self.fc = nn.Linear(self.board_dim[0]*self.board_dim[1]*32, self.action_size)

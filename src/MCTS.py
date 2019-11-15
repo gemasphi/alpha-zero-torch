@@ -23,9 +23,10 @@ class MCTS(object):
 		return self.calc_policy(self.game_states[self.root_node], temp)
 
 	def calc_policy(self, game_state, temp):
-		count = game_state.get_edge_count(temp)
-		count_sum = game_state.get_N()
-		return count**(1/temp)/count_sum**(1/temp)
+		count = game_state.get_edge_count()
+		count = count**(1/temp)
+		count_sum = sum(count)
+		return count/count_sum
 
 	def search(self, game):
 		s = str(game.get_canonical_board())
@@ -111,7 +112,7 @@ class GameState():
 	def get_game(self):
 		return self.game
 
-	def get_edge_count(self, temp):
+	def get_edge_count(self):
 		count = np.zeros(len(self.policy))
 
 		for a, edge in self.edges.items():

@@ -1,4 +1,4 @@
-from MCTS import MCTS
+from .MCTS import MCTS
 import numpy as np
 
 def play_game(game, p1, p2, print_b = False):
@@ -93,6 +93,4 @@ class NNPlayer(Player):
 		poss = game.get_possible_actions()
 		action_probs = action_probs * poss
 		action = np.argmax(action_probs)
-		print(v)
-		print(action_probs)
 		return action
