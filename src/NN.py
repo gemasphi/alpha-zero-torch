@@ -9,13 +9,15 @@ class NetWrapper(object):
     def __init__(self, game, **params):
         super(NetWrapper, self).__init__()
         self.nn = AlphaZeroNet(game, params['n_res_layers'])
-        self.optimizer = optim.Adam(self.nn.parameters(), lr = 0.1, weight_decay = 0.005)
 
-    def train(self, data, batch_size = 32, loss_display = 2, epochs = 10):
+    def train(self, data, batch_size = 32, loss_display = 2, epochs = 10, lr = 0.1 , wd = 0.005):
         self.nn.train()
+        self.optimizer = optim.Adam(self.nn.parameters(), lr = lr, weight_decay = wd)
         data = torch.utils.data.DataLoader(data, batch_size = batch_size, shuffle=True)
-        
+        total_loss = 0.0
+        n_iters = 0
         for epoch in range(epochs): 
+
             running_loss = 0.0
             for i, batch in enumerate(data, 0):
                 board, policy, outcome = batch
@@ -25,13 +27,15 @@ class NetWrapper(object):
                 loss.backward()
                 self.optimizer.step()
                 running_loss += loss.item()
-
+                total_loss += loss.item()
                 if i!= 0 and i % loss_display == 0:    
                     print('[%d, %5d] loss: %.3f' %
                           (epoch + 1, i + 1, running_loss / loss_display))
                     running_loss = 0.0
 
-        return self.nn
+                n_iters += 1
+
+        return total_loss/n_iters
     
     def predict(self, board):
         self.nn.eval()
@@ -51,10 +55,12 @@ class NetWrapper(object):
             'optimizer_state_dict': self.optimizer.state_dict(),
             }, "{}/{}".format(folder, model_name))
 
-    def load_model(self, path = "../models/model.pt"):
+    def load_model(self, path = "../models/model.pt", load_optim = False):
         cp = torch.load(path)
         self.nn.load_state_dict(cp['model_state_dict'])
-        self.optimizer.load_state_dict(cp['optimizer_state_dict'])
+        if load_optim:   
+            self.optimizer = optim.Adam(self.nn.parameters(), lr = 0.1, weight_decay = 0.005)
+            self.optimizer.load_state_dict(cp['optimizer_state_dict'])
         return self.nn
         
 class AlphaZeroNet(nn.Module):

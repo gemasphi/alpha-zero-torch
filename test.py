@@ -13,6 +13,5 @@ nn.load_model("models/old_model.pt")
 nn1 = NetWrapper(game, **config['NN'])
 nn1.load_model()
 mcts = MCTS(**config['MCTS'])
-AlphaZeroPlayer
 
 player_vs_player(game, p1 =  AlphaZeroPlayer(nn1, mcts), p2 = AlphaZeroPlayer(nn, mcts), n_games = 50, treshold = 0.8,  print_b = True)

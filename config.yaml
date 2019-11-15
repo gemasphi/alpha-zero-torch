@@ -3,11 +3,11 @@ GAME:
   in_row: 3
 MCTS:
   n_simulations: 10
-  cpuct: 3
-  dirichlet_alpha: 1
+  cpuct: 1.5
+  dirichlet_alpha: 0.3
 NN:
   n_res_layers: 5
 AZ:
-  eps: 25
-  n_games: 10
+  eps: 1
+  n_games: 20
   queue_len: 300

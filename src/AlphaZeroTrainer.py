@@ -11,18 +11,21 @@ class AlphaZeroTrainer(object):
 		self.n_games = params['n_games']
 		self.eps = params['eps']
 
-	def train(self):
+	def train(self, lr, wd):
 		train_data = deque([], maxlen = self.queue_len)
-		self.temp = 2
+		self.temp = 1
 
 		for i in range(self.eps):
-			print("One self play ep: {}/{}".format(i,self.eps))
 			train_data += self.generate_data()
-			self.nn_wrapper.train(train_data)
+			loss = self.nn_wrapper.train(train_data, lr = lr ,wd = wd)
 			self.nn_wrapper.save_model()
 			
 			if self.eps == 5:
 				self.temp = 0.5
+
+			print("One self play ep: {}/{}, avg loss: {}".format(i,self.eps, loss))
+
+		return loss
 
 	def generate_data(self):
 		train_examples = deque([])
