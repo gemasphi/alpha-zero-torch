@@ -89,7 +89,10 @@ class NNPlayer(Player):
 		
 	def get_action(self, game):
 		v, action_probs = self.nn.predict(game.get_canonical_board())
+		action_probs = action_probs.flatten()
 		poss = game.get_possible_actions()
-		action_probs = (action_probs * poss)[0]
+		action_probs = action_probs * poss
 		action = np.argmax(action_probs)
+		print(v)
+		print(action_probs)
 		return action

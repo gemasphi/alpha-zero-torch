@@ -9,5 +9,5 @@ NN:
   n_res_layers: 5
 AZ:
   eps: 25
-  n_games: 20
+  n_games: 2
   queue_len: 200

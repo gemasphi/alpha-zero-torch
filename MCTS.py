@@ -20,18 +20,19 @@ class MCTS(object):
 		for i in range(self.n_simulations):
 			self.search(game)
 
-		return self.calc_action_probs(self.game_states[self.root_node], temp)
+		return self.calc_policy(self.game_states[self.root_node], temp)
 
-	def calc_action_probs(self, game_state, temp):
+	def calc_policy(self, game_state, temp):
 		count = game_state.get_edge_count(temp)
 		count_sum = game_state.get_N()
 		return count**(1/temp)/count_sum**(1/temp)
 
 	def search(self, game):
 		s = str(game.get_canonical_board())
+		winner = game.check_winner() 
 
-		if self.game_ended(s, game):
-			return -self.game_states[s].get_game_ended()
+		if winner != None:
+			return -winner
 
 		if not self.game_expanded(s):
 			return -self.expand(s, game)
@@ -53,11 +54,8 @@ class MCTS(object):
 			d = np.random.dirichlet(np.ones(len(p))*self.dirichlet_alpha)
 			p = 0.75*p + 0.25*d
 
-		if game.check_winner() != None: #Case when the board is full which means there wont be any possible actions tODO:LMAO THIS IS JUST A DRAW BRUH
-			self.game_states[s] = GameState(game, net_policy = p, policy = game.get_possible_actions()) #fix the v value
-		else:
-			valid_actions = self.get_valid_actions(p, poss, game)
-			self.game_states[s] = GameState(game, net_policy = p, policy = valid_actions)
+		valid_actions = self.get_valid_actions(p, poss, game)
+		self.game_states[s] = GameState(game, policy = valid_actions)
 
 		return v 
 
@@ -71,21 +69,16 @@ class MCTS(object):
 		valid_actions = [x/sum_p for x in valid_actions] 
 		return valid_actions
 
-	def game_ended(self, s, game):
-		return (s in self.game_states and game.check_winner() != None)
-
 	def game_expanded(self, s):
 		return s in self.game_states
 
 
 class GameState():
-	def __init__(self, game, N = 0, net_policy = 0, E = 0, policy = 0):
+	def __init__(self, game, policy = 0):
 		super(GameState, self).__init__()
 		self.game = game
-		self.N = N 	# stores #times board s was visited
-		self.net_policy = net_policy  # stores initial policy (returned by neural net)
-		self.game_ended = game.check_winner()        # stores game.getGameEnded ended for board s
-		self.policy = policy        # stores game.getpolicyalidMoves for board s
+		self.N = 0
+		self.policy = policy       
 		self.edges = {a: Edge() for a in range(len(policy)) if policy[a] != 0 }
 
 	def select(self, cpuct):
@@ -115,14 +108,12 @@ class GameState():
 	def valid_actions(self):
 		return self.policy
 
-	def get_game_ended(self):
-		return self.game_ended
-
 	def get_game(self):
 		return self.game
 
 	def get_edge_count(self, temp):
-		count = np.zeros(len(self.net_policy)) 
+		count = np.zeros(len(self.policy))
+
 		for a, edge in self.edges.items():
 			count[a] =  edge.get_N()
 		return count

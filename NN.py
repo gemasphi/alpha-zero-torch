@@ -11,10 +11,10 @@ class NetWrapper(object):
         self.nn = AlphaZeroNet(game, params['n_res_layers'])
         self.optimizer = optim.Adam(self.nn.parameters(), lr = 0.2, weight_decay = 0.1)
 
-    def train(self, data, batch_size = 32, loss_display = 3, epochs = 10):
+    def train(self, data, batch_size = 32, loss_display = 2, epochs = 10):
         self.nn.train()
-
         data = torch.utils.data.DataLoader(data, batch_size = batch_size, shuffle=True)
+        
         for epoch in range(epochs): 
             running_loss = 0.0
             for i, batch in enumerate(data, 0):
@@ -25,7 +25,8 @@ class NetWrapper(object):
                 loss.backward()
                 self.optimizer.step()
                 running_loss += loss.item()
-                if i % loss_display == 0:    
+
+                if i!= 0 and i % loss_display == 0:    
                     print('[%d, %5d] loss: %.3f' %
                           (epoch + 1, i + 1, running_loss / loss_display))
                     running_loss = 0.0

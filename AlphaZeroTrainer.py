@@ -17,7 +17,7 @@ class AlphaZeroTrainer(object):
 		train_data = deque([], maxlen = self.queue_len)
 
 		for i in range(self.eps):
-			print("One self play ep: {}/{}".format(i,self.eps))
+			#print("One self play ep: {}/{}".format(i,self.eps))
 			train_data += self.generate_data()
 			self.nn_wrapper.train(train_data)
 			self.nn_wrapper.save_model()
@@ -29,7 +29,6 @@ class AlphaZeroTrainer(object):
 			print("Games played: {}/{}".format(i,self.n_games))
 			generated = self.self_play()
 			train_examples += generated 
-
 		return train_examples
 
 	def self_play(self):
