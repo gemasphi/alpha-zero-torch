@@ -56,14 +56,14 @@ class Tictactoe(Game):
 		self.player = self.player*-1
 
 	def check_winner(self):
-		if len(np.argwhere(self.board == 0)) == 0:
-			return 0
-
 		for p in [-1,1]:
 			player_positions = (self.board == p)
 			if self.find_win(player_positions):
 				return p*self.player			
 
+		if len(np.argwhere(self.board == 0)) == 0:
+			return 0
+			
 		return None
 
 	def find_win(self, player_positions):

@@ -10,7 +10,9 @@ from src.MCTS import MCTS
 
 with open("config.yaml", 'r') as f:
     config = yaml.safe_load(f)
+
 game = Tictactoe(**config['GAME'])
 mcts = MCTS(**config['MCTS'])
+nn = NetWrapper(game, **config['NN'])
 alphat = az(nn, game, mcts, **config['AZ'])
-loss = alphat.train()
+loss = alphat.train(lr = 0.01, wd = 0.015)

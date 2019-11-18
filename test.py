@@ -14,4 +14,4 @@ nn1 = NetWrapper(game, **config['NN'])
 nn1.load_model()
 mcts = MCTS(**config['MCTS'])
 
-player_vs_player(game, p1 =  AlphaZeroPlayer(nn1, mcts), p2 = AlphaZeroPlayer(nn, mcts), n_games = 50, treshold = 0.8,  print_b = True)
+player_vs_player(game, p2 =  AlphaZeroPlayer(nn1, mcts), p1 = HumanPlayer(), n_games = 1, treshold = 0.8,  print_b = True)
