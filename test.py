@@ -9,9 +9,12 @@ with open("config.yaml", 'r') as f:
 
 game = Tictactoe(**config['GAME'])
 nn = NetWrapper(game, **config['NN'])
-nn.load_model("models/old_model.pt")
+nn.load_model("models/the_bestest_of_models.pt")
+
 nn1 = NetWrapper(game, **config['NN'])
 nn1.load_model()
+
 mcts = MCTS(**config['MCTS'])
 
-player_vs_player(game, p2 =  AlphaZeroPlayer(nn1, mcts), p1 = HumanPlayer(), n_games = 1, treshold = 0.8,  print_b = True)
+play_game(game, p1 =  AlphaZeroPlayer(nn1, mcts), p2 =  HumanPlayer(), print_b = True)
+#player_vs_player(game, p1 =  AlphaZeroPlayer(nn, mcts),  p2 =  AlphaZeroPlayer(nn1, mcts), n_games = 100, treshold = 0.5, print_b = False)

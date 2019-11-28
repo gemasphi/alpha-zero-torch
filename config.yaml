@@ -3,11 +3,15 @@ GAME:
   in_row: 3
 MCTS:
   n_simulations: 25
-  cpuct: 1.5
-  dirichlet_alpha: 0.3
+  cpuct: 2.5
+  dirichlet_alpha: 1.10
 NN:
   n_res_layers: 5
 AZ:
-  eps: 25
-  n_games: 20
-  queue_len: 300
+  eps: 50
+  n_games: 10
+  queue_len: 50
+  temp:
+    treshold: 6
+    before: 3
+    after: 0.01

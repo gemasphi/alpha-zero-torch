@@ -14,5 +14,7 @@ with open("config.yaml", 'r') as f:
 game = Tictactoe(**config['GAME'])
 mcts = MCTS(**config['MCTS'])
 nn = NetWrapper(game, **config['NN'])
+#nn.load_model()
+
 alphat = az(nn, game, mcts, **config['AZ'])
 loss = alphat.train(lr = 0.01, wd = 0.015)

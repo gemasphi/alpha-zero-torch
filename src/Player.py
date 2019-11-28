@@ -1,5 +1,6 @@
 from .MCTS import MCTS
 import numpy as np
+from math import inf as infinity
 
 def play_game(game, p1, p2, print_b = False):
 	game.reset()
@@ -61,7 +62,6 @@ class AlphaZeroPlayer(Player):
 		action_probs = self.mcts.simulate(game, self.nn)
 		action = np.argmax(action_probs)
 		print(action_probs)
-
 		return action
 
 	def get_nn(self):
@@ -93,5 +93,49 @@ class NNPlayer(Player):
 		action_probs = action_probs.flatten()
 		poss = game.get_possible_actions()
 		action_probs = action_probs * poss
+		print(action_probs)
+		print(v)
 		action = np.argmax(action_probs)
 		return action
+
+
+class MinimaxPlayer(Player):
+	def __init(self):
+		super(MinimaxPlayer, self).__init__()
+	def get_action(self, game):
+		self.pos_explored = 0
+		return self.minimax(9, game, game.get_player())
+
+	def minimax(self, depth, game, initial_player):
+		self.pos_explored += 1
+		if self.pos_explored % 1000 == 0:
+			print(self.pos_explored)
+			print(depth)
+
+		if game.get_player() == initial_player:
+			best = [-1, -infinity]
+		else:
+			best = [-1, +infinity]
+
+		winner = game.check_winner()
+
+		if depth == 0 or winner != None:
+			return [-1 , winner]
+
+		poss_actions_index = game.get_possible_actions_index()
+		for action in poss_actions_index:
+			n_game = game.copy_game()
+			n_game.play(action)
+			score = self.minimax(depth - 1, n_game, initial_player)
+			score[0] = action
+
+			if game.get_player() == initial_player:
+				if score[1] > best[1]:
+					best = score  # max value
+			else:
+				if score[1] < best[1]:
+					best = score  # min value
+
+		return best
+
+

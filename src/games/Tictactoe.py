@@ -2,12 +2,14 @@ from .Game import Game
 import numpy as np
 
 class Tictactoe(Game):
-	def __init__(self,  player = 1, **params):
+	def __init__(self,  player = 1,history = None, probs = None,  **params):
 		self.params = params
 		self.board_size = params['board_size']
 		self.board = np.zeros(params['board_size'])  
 		self.in_row = params['in_row']
 		self.player = player
+		self.history = history or []
+		self.probs = probs or []
 
 	def set_board(self, board):
 		self.board = board
@@ -40,10 +42,10 @@ class Tictactoe(Game):
 				else:
 					p.append(0)
 
-		return p
+		return np.array(p)
 
 	def get_possible_actions_index(self):
-		return np.argwhere(self.board == 0)
+		return np.argwhere(self.get_possible_actions() != 0).flatten()
 
 	def get_player(self):
 		return self.player
@@ -54,6 +56,20 @@ class Tictactoe(Game):
 
 		self.board[x][y] = self.player
 		self.player = self.player*-1
+		self.history.append(np.copy(self.board))
+	
+	def add_policy(self, p):
+		self.probs.append(p)
+
+	def make_input(self, i):
+		player = -1 if i % 2 == 0 else 1  
+		return player*self.history[i]
+
+	def make_target(self, i):
+		player = -1 if i % 2 == 0 else 1  
+		winner = self.check_winner()		
+
+		return self.probs[i], winner*self.get_player()*player 
 
 	def check_winner(self):
 		for p in [-1,1]:
@@ -63,7 +79,7 @@ class Tictactoe(Game):
 
 		if len(np.argwhere(self.board == 0)) == 0:
 			return 0
-			
+		
 		return None
 
 	def find_win(self, player_positions):
@@ -105,6 +121,10 @@ class Tictactoe(Game):
 		return self.board*self.player
 
 	def copy_game(self):
-		new_game = Tictactoe(player = self.get_player(), **self.params)
-		new_game.set_board(np.copy(self.get_board()))
-		return new_game
+		g = Tictactoe(player = self.get_player(), 
+			history = list(self.history), 
+			probs = list(self.probs), 
+			**self.params)
+		g.set_board(np.copy(self.board))
+		return g
+

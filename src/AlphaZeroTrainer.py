@@ -1,5 +1,5 @@
 import numpy as np
-from collections import deque
+from .utils.plot import unique_positions_vis
 
 class AlphaZeroTrainer(object):
 	def __init__(self, NN, game, mcts, **params):
@@ -10,44 +10,61 @@ class AlphaZeroTrainer(object):
 		self.queue_len = params['queue_len']
 		self.n_games = params['n_games']
 		self.eps = params['eps']
+		self.temp = params['temp']
+		self.replay_buffer = ReplayBuffer(self.queue_len)
 
 	def train(self, lr, wd):
-		train_data = deque([], maxlen = self.queue_len)
-		self.temp = 1
-
 		for i in range(self.eps):
-			train_data += self.generate_data()
-			loss = self.nn_wrapper.train(train_data, lr = lr ,wd = wd)
-			self.nn_wrapper.save_model()
-			
-			if self.eps == 5:
-				self.temp = 0.5
+			for j in range(self.n_games):
+				print("One game played {}/{}".format(j, self.n_games))
+				self.replay_buffer.save_game(self.play_game())
 
+			loss = self.nn_wrapper.train(self.replay_buffer, lr = lr ,wd = wd)
 			print("One self play ep: {}/{}, avg loss: {}".format(i,self.eps, loss))
 
 		return loss
 
-	def generate_data(self):
-		train_examples = deque([])
-
-		for i in range(self.n_games):
-			print("Games played: {}/{}".format(i,self.n_games))
-			generated = self.self_play()
-			train_examples += generated 
-		return train_examples
-
-	def self_play(self):
-		examples = []
+	def play_game(self):
 		winner = None
 		self.game.reset()
+		self.mcts.reset()
+		game_step = 0
+		temp = self.temp['before']
+
 		while winner == None:
-			action_probs = self.mcts.simulate(self.game, self.nn_wrapper, self.temp)
+			if game_step < self.temp['treshold']:
+				temp = self.temp['after']
+			
+			action_probs = self.mcts.simulate(self.game, self.nn_wrapper, temp)
 			action = np.random.choice(len(action_probs),p = action_probs) #TODO: should this be uniform or not?
-				
-			examples.append([np.copy(self.game.get_board()), action_probs, self.game.get_player()])
 			self.game.play(action)
+				
 			winner = self.game.check_winner()
+			game_step += 1
+		
+		return self.game.copy_game()
 
-		examples.append([np.copy(self.game.get_board()), action_probs, self.game.get_player()])
+class ReplayBuffer(object):
+	def __init__(self, window_size):
+		super(ReplayBuffer, self).__init__()
+		self.buffer = []
+		self.window_size = window_size
 
-		return [(ex[0]*ex[2], ex[1], winner*self.game.get_player()*ex[2]) for ex in examples[1:]]
+	def save_game(self, game):
+	    if len(self.buffer) > self.window_size:
+	      self.buffer.pop(0)
+	    self.buffer.append(game)
+
+	def sample_batch(self, batch_size):
+	    n_positions = self.get_total_positions()
+
+	    games = np.random.choice(
+	        self.buffer,
+	        size= batch_size)
+
+	    game_pos = [(g, np.random.randint(len(g.history))) for g in games]
+	    pos = np.array([[g.make_input(i), *g.make_target(i)] for (g, i) in game_pos])
+	    return list(pos[:,0]), list(pos[:,1]), list(pos[:,2])
+
+	def get_total_positions(self):
+		return float(sum(len(g.history) for g in self.buffer))

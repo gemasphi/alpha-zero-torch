@@ -13,6 +13,9 @@ class MCTS(object):
 		self.n_simulations = params['n_simulations']
 		self.dirichlet_alpha = params['dirichlet_alpha']
 
+	def reset(self):  #discards tree TODO: there's no need to completly discard the tree
+		self.game_states = {}
+
 	def simulate(self, game, nn, temp = 1):
 		self.root_node = str(game.get_canonical_board())
 		self.nn_wrapper = nn
@@ -20,13 +23,15 @@ class MCTS(object):
 		for i in range(self.n_simulations):
 			self.search(game)
 
-		return self.calc_policy(self.game_states[self.root_node], temp)
+		p = self.calc_policy(self.game_states[self.root_node], temp) 
+		game.add_policy(p)
+		return p
 
 	def calc_policy(self, game_state, temp):
 		count = game_state.get_edge_count()
-		count = count**(1/temp)
-		count_sum = sum(count)
-		return count/count_sum
+		count_t = count**(1/temp)
+
+		return count_t/sum(count_t)
 
 	def search(self, game):
 		s = str(game.get_canonical_board())
@@ -66,9 +71,7 @@ class MCTS(object):
 		if not np.any(valid_actions): 			#case where there are no valid actions, we use possible actions
 			valid_actions = poss
 
-		sum_p = sum(valid_actions)
-		valid_actions = [x/sum_p for x in valid_actions] 
-		return valid_actions
+		return valid_actions/sum(valid_actions)
 
 	def game_expanded(self, s):
 		return s in self.game_states

@@ -4,38 +4,36 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import os
+import numpy as np
 
 class NetWrapper(object):
     def __init__(self, game, **params):
         super(NetWrapper, self).__init__()
         self.nn = AlphaZeroNet(game, params['n_res_layers'])
 
-    def train(self, data, batch_size = 32, loss_display = 2, epochs = 10, lr = 0.1 , wd = 0.005):
+    def train(self, data, batch_size = 16, loss_display = 5, training_steps = 25, lr = 0.1 , wd = 0.005):
         self.nn.train()
         self.optimizer = optim.Adam(self.nn.parameters(), lr = lr, weight_decay = wd)
-        data = torch.utils.data.DataLoader(data, batch_size = batch_size, shuffle=True)
+
         total_loss = 0.0
-        n_iters = 0
-        for epoch in range(epochs): 
+        running_loss = 0
 
-            running_loss = 0.0
-            for i, batch in enumerate(data, 0):
-                board, policy, outcome = batch
-                self.optimizer.zero_grad()
-                v, p = self.nn(board.float())
-                loss = self.nn.loss((v, p), (outcome, policy))
-                loss.backward()
-                self.optimizer.step()
-                running_loss += loss.item()
-                total_loss += loss.item()
-                if i!= 0 and i % loss_display == 0:    
-                    print('[%d, %5d] loss: %.3f' %
-                          (epoch + 1, i + 1, running_loss / loss_display))
-                    running_loss = 0.0
+        for i in range(training_steps): 
+            board, policy, value = data.sample_batch(batch_size)
+            self.optimizer.zero_grad()
+            v, p = self.nn(torch.Tensor(board))
+            loss = self.nn.loss((v, p), (torch.Tensor(value), torch.Tensor(policy)))
+            loss.backward()
+            self.optimizer.step()
+            running_loss += loss.item()
+            total_loss += loss.item()
+            
+            if i!= 0 and i % loss_display == 0:    
+                print('[%d, %5d] loss: %.3f' %
+                      (1, i + 1, running_loss / loss_display))
+                running_loss = 0.0
 
-                n_iters += 1
-
-        return total_loss/n_iters
+        return total_loss/training_steps
     
     def predict(self, board):
         self.nn.eval()
@@ -46,7 +44,7 @@ class NetWrapper(object):
         p = p.detach().numpy()
         return v, p
 
-    def save_model(self, folder = "../models", model_name = "model.pt"):
+    def save_model(self, folder = "models", model_name = "model.pt"):
         if not os.path.isdir(folder):
             os.mkdir(folder)
 
@@ -55,7 +53,7 @@ class NetWrapper(object):
             'optimizer_state_dict': self.optimizer.state_dict(),
             }, "{}/{}".format(folder, model_name))
 
-    def load_model(self, path = "../models/model.pt", load_optim = False):
+    def load_model(self, path = "models/model.pt", load_optim = False):
         cp = torch.load(path)
         self.nn.load_state_dict(cp['model_state_dict'])
         if load_optim:   
