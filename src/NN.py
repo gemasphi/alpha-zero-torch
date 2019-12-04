@@ -11,7 +11,7 @@ class NetWrapper(object):
         super(NetWrapper, self).__init__()
         self.nn = AlphaZeroNet(game, params['n_res_layers'])
 
-    def train(self, data, batch_size = 16, loss_display = 5, training_steps = 25, lr = 0.1 , wd = 0.005):
+    def train(self, data, batch_size = 16, loss_display = 5, training_steps = 150, lr = 0.1 , wd = 0.005):
         self.nn.train()
         self.optimizer = optim.Adam(self.nn.parameters(), lr = lr, weight_decay = wd)
 
@@ -44,7 +44,7 @@ class NetWrapper(object):
         p = p.detach().numpy()
         return v, p
 
-    def save_model(self, folder = "models", model_name = "model.pt"):
+    def save_model(self, folder = "models", model_name = "fdsmodel.pt"):
         if not os.path.isdir(folder):
             os.mkdir(folder)
 
@@ -53,7 +53,7 @@ class NetWrapper(object):
             'optimizer_state_dict': self.optimizer.state_dict(),
             }, "{}/{}".format(folder, model_name))
 
-    def load_model(self, path = "models/model.pt", load_optim = False):
+    def load_model(self, path = "models/fdsmodel.pt", load_optim = False):
         cp = torch.load(path)
         self.nn.load_state_dict(cp['model_state_dict'])
         if load_optim:   

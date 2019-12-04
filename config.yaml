@@ -9,9 +9,9 @@ NN:
   n_res_layers: 5
 AZ:
   eps: 50
-  n_games: 10
-  queue_len: 50
+  n_games: 20
+  queue_len: 70
   temp:
-    treshold: 6
-    before: 3
-    after: 0.01
+    treshold: 10
+    before: 1
+    after: 1

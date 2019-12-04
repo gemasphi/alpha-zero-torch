@@ -9,12 +9,16 @@ class MCTS(object):
 	def __init__(self, **params):
 		super(MCTS, self).__init__()
 		self.game_states = {}
+		self.params = params
 		self.cpuct = params['cpuct']
 		self.n_simulations = params['n_simulations']
 		self.dirichlet_alpha = params['dirichlet_alpha']
 
 	def reset(self):  #discards tree TODO: there's no need to completly discard the tree
 		self.game_states = {}
+
+	def new_mcts(self):
+		return MCTS(**self.params)
 
 	def simulate(self, game, nn, temp = 1):
 		self.root_node = str(game.get_canonical_board())

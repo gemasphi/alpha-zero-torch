@@ -18,6 +18,8 @@ class Tictactoe(Game):
 		self.player = 1
 		self.board = np.zeros(self.board_size)
 
+	def new_game(self):
+		return Tictactoe(**self.params)
 	def get_action_size(self):
 		return self.board_size[0]*self.board_size[1]
 

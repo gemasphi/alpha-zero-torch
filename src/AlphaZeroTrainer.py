@@ -1,5 +1,6 @@
 import numpy as np
 from .utils.plot import unique_positions_vis
+from multiprocessing.dummy import Pool as ThreadPool
 
 class AlphaZeroTrainer(object):
 	def __init__(self, NN, game, mcts, **params):
@@ -14,35 +15,43 @@ class AlphaZeroTrainer(object):
 		self.replay_buffer = ReplayBuffer(self.queue_len)
 
 	def train(self, lr, wd):
+		pool = ThreadPool(4)
+
 		for i in range(self.eps):
-			for j in range(self.n_games):
-				print("One game played {}/{}".format(j, self.n_games))
-				self.replay_buffer.save_game(self.play_game())
+			#for j in range(self.n_games):
+			#	self.play_game(j)
+
+			pool.map(self.play_game, range(self.n_games))
+
+			#print(self.replay_buffer.buffer)
+			#for j in range(self.n_games):
+			#	print("One game played {}/{}".format(j, self.n_games))
 
 			loss = self.nn_wrapper.train(self.replay_buffer, lr = lr ,wd = wd)
+			self.nn_wrapper.save_model()
 			print("One self play ep: {}/{}, avg loss: {}".format(i,self.eps, loss))
 
 		return loss
 
-	def play_game(self):
+	def play_game(self, n_game):
 		winner = None
-		self.game.reset()
-		self.mcts.reset()
+		game = self.game.new_game()
+		mcts = self.mcts.new_mcts()
 		game_step = 0
 		temp = self.temp['before']
-
+		print(f'plaing game number{n_game}')
 		while winner == None:
 			if game_step < self.temp['treshold']:
 				temp = self.temp['after']
 			
-			action_probs = self.mcts.simulate(self.game, self.nn_wrapper, temp)
+			action_probs = mcts.paralell_simulate(game, self.nn_wrapper, temp)
 			action = np.random.choice(len(action_probs),p = action_probs) #TODO: should this be uniform or not?
-			self.game.play(action)
+			game.play(action)
 				
-			winner = self.game.check_winner()
+			winner = game.check_winner()
 			game_step += 1
 		
-		return self.game.copy_game()
+		self.replay_buffer.save_game(game)
 
 class ReplayBuffer(object):
 	def __init__(self, window_size):
