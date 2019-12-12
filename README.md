@@ -7,4 +7,4 @@ This alpha zero version is currently in version alpha zero and new features will
 Currently, there exist three branches in this repo:
 * Master: contains a simple sequential pytorch implementaiton
 * virtual_loss: master + monte carlo virtual loss
-* cpp: Contains the games and mcts and NN evaluation in c++ and the training in python
+* cpp (work in progress): Contains the games and mcts and NN evaluation in c++ and the training in python
